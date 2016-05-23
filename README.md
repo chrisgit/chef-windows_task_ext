@@ -1,9 +1,13 @@
 Windows Task Ext
 ====================
 We want to use the Start In / Working Directory (cwd) functionality of the Windows Task resource as documented here: https://github.com/chef-cookbooks/windows#windows_task
+
 Unfortunately the cwd functionality was not implimented until the Windows cookbook version 1.39.0.
+
 The code to alter the cwd of the Windows Task in the Windows cookbook works well with Chef 12 but fails with Chef 11.
+
 To alter the cwd, the Windows cookbook outputs the Schedule Task to an XML file and uses Ruby's REXML/document, which unfortunately has a few issues in Ruby 1.9.3 (the version supplied with Chef 11).
+
 After burning up a weekend trying to get the Schedule Task XML to work with the version of REXML supplied with Ruby 1.9.3 I gave up and resorted to three alternative solutions.
 
 1. Let the Windows cookbook create the schedule task, then use an execute resource to update the schedule task using the "schtasks" command passing in the full path to the program (or script) we want to run and using the /V1 parameter to set the working directory and /F parameter to force an update of the task.
@@ -51,7 +55,18 @@ windows_task 'chef-client' do
   path 'c:/temp/chef-client.xml'
   action :import
 end
+````
 
+The code could be adapted to create a new provider by making Provider::ExtendTask a class and inheriting Chef::Provider::WindowsTask, the disadvantage is that each windows_task resource has to specify which provider it will be using.
+
+````
+windows_task 'chef-client' do
+  provider Provider::ExtendTask
+  user windows_username
+  password windows_username_password
+  path 'c:/temp/chef-client.xml'
+  action :import
+end
 ````
 
 Contributing
